@@ -1,6 +1,6 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: zimzaza4 <3625282098@qq.com>
-Date: Fri, 2 Aug 2024 17:20:11 +0800
+Date: Fri, 2 Aug 2024 18:13:47 +0800
 Subject: [PATCH] NewPathfinderAPI
 
 
@@ -84,11 +84,87 @@ index 03fef01b9801cfa1c365f9b490c203a29f94cbea..e1d4f8c7c6a1853b85dcb0945fc52d45
      public static boolean isBurningBlock(BlockState state) {
          return state.is(BlockTags.FIRE)
              || state.is(Blocks.LAVA)
+diff --git a/src/main/java/net/minecraft/world/level/pathfinder/PathTypeCache.java b/src/main/java/net/minecraft/world/level/pathfinder/PathTypeCache.java
+index b01d44d8403d2691db5c7dbc148f1dd3fdb4d8a3..c54d5d4e2895493458e4a4d46fa7009721951c86 100644
+--- a/src/main/java/net/minecraft/world/level/pathfinder/PathTypeCache.java
++++ b/src/main/java/net/minecraft/world/level/pathfinder/PathTypeCache.java
+@@ -11,11 +11,15 @@ public class PathTypeCache {
+     private final long[] positions = new long[4096];
+     private final PathType[] pathTypes = new PathType[4096];
+ 
+-    public PathType getOrCompute(BlockGetter world, BlockPos pos) {
++    public PathType getOrCompute(BlockGetter world, BlockPos pos, @Nullable NodeEvaluator evaluator) {
+         long l = pos.asLong();
+         int i = index(l);
+         PathType pathType = this.get(i, l);
+-        return pathType != null ? pathType : this.compute(world, pos, i, l);
++        return pathType != null ? pathType : this.compute(world, pos, i, l, evaluator);
++    }
++
++    public PathType getOrCompute(BlockGetter world, BlockPos pos) {
++        return getOrCompute(world, pos, null);
+     }
+ 
+     @Nullable
+@@ -23,13 +27,17 @@ public class PathTypeCache {
+         return this.positions[index] == pos ? this.pathTypes[index] : null;
+     }
+ 
+-    private PathType compute(BlockGetter world, BlockPos pos, int index, long longPos) {
+-        PathType pathType = WalkNodeEvaluator.getPathTypeFromState(world, pos);
++    private PathType compute(BlockGetter world, BlockPos pos, int index, long longPos, @Nullable NodeEvaluator evaluator) { // Marigold
++        PathType pathType = WalkNodeEvaluator.getPathTypeFromState(world, pos, evaluator);
+         this.positions[index] = longPos;
+         this.pathTypes[index] = pathType;
+         return pathType;
+     }
+ 
++    private PathType compute(BlockGetter world, BlockPos pos, int index, long longPos) {
++        return compute(world, pos, index, longPos, null);
++    }
++
+     public void invalidate(BlockPos pos) {
+         long l = pos.asLong();
+         int i = index(l);
+diff --git a/src/main/java/net/minecraft/world/level/pathfinder/PathfindingContext.java b/src/main/java/net/minecraft/world/level/pathfinder/PathfindingContext.java
+index 9b7f962df041f1b437a983c48337e35cfeb14744..ea1c8a08eb17081d311d9fbdf8bb0333d8fa1602 100644
+--- a/src/main/java/net/minecraft/world/level/pathfinder/PathfindingContext.java
++++ b/src/main/java/net/minecraft/world/level/pathfinder/PathfindingContext.java
+@@ -13,6 +13,7 @@ public class PathfindingContext {
+     private final PathTypeCache cache;
+     private final BlockPos mobPosition;
+     private final BlockPos.MutableBlockPos mutablePos = new BlockPos.MutableBlockPos();
++    private final NodeEvaluator evaluator;
+ 
+     public PathfindingContext(CollisionGetter world, Mob entity) {
+         this.level = world;
+@@ -23,11 +24,12 @@ public class PathfindingContext {
+         }
+ 
+         this.mobPosition = entity.blockPosition();
++        this.evaluator = entity.getNavigation().getNodeEvaluator();
+     }
+ 
+     public PathType getPathTypeFromState(int x, int y, int z) {
+         BlockPos blockPos = this.mutablePos.set(x, y, z);
+-        return this.cache == null ? WalkNodeEvaluator.getPathTypeFromState(this.level, blockPos) : this.cache.getOrCompute(this.level, blockPos);
++        return this.cache == null ? WalkNodeEvaluator.getPathTypeFromState(this.level, blockPos, evaluator) : this.cache.getOrCompute(this.level, blockPos);
+     }
+ 
+     public BlockState getBlockState(BlockPos pos) {
 diff --git a/src/main/java/net/minecraft/world/level/pathfinder/WalkNodeEvaluator.java b/src/main/java/net/minecraft/world/level/pathfinder/WalkNodeEvaluator.java
-index f26383cf896785333dbd6f86348d5a5f67a6731f..2cef4616982c900fbce9d7a8839ecb56a14ae772 100644
+index f26383cf896785333dbd6f86348d5a5f67a6731f..0d9b3e94fbdc69772aab7944800cb99f13f0a7cd 100644
 --- a/src/main/java/net/minecraft/world/level/pathfinder/WalkNodeEvaluator.java
 +++ b/src/main/java/net/minecraft/world/level/pathfinder/WalkNodeEvaluator.java
-@@ -27,6 +27,7 @@ import net.minecraft.world.level.material.Fluids;
+@@ -6,6 +6,7 @@ import it.unimi.dsi.fastutil.objects.Object2BooleanMap;
+ import it.unimi.dsi.fastutil.objects.Object2BooleanOpenHashMap;
+ import java.util.EnumSet;
+ import java.util.Set;
++import java.util.function.Function;
+ import javax.annotation.Nullable;
+ import net.minecraft.core.BlockPos;
+ import net.minecraft.core.Direction;
+@@ -27,6 +28,7 @@ import net.minecraft.world.level.material.Fluids;
  import net.minecraft.world.phys.AABB;
  import net.minecraft.world.phys.Vec3;
  import net.minecraft.world.phys.shapes.VoxelShape;
@@ -96,23 +172,40 @@ index f26383cf896785333dbd6f86348d5a5f67a6731f..2cef4616982c900fbce9d7a8839ecb56
  
  public class WalkNodeEvaluator extends NodeEvaluator {
      public static final double SPACE_BETWEEN_WALL_POSTS = 0.5;
-@@ -410,6 +411,19 @@ public class WalkNodeEvaluator extends NodeEvaluator {
-                         pathType = PathType.UNPASSABLE_RAIL;
-                     }
+@@ -477,13 +479,26 @@ public class WalkNodeEvaluator extends NodeEvaluator {
+         return fallback;
+     }
  
-+                    // Marigold start
-+                    BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos(l, m, n);
-+                    CraftBlock bblock = CraftBlock.at(mob.level(), pos);
-+                    PathType newPathType = switch (canPassHandler.apply(bblock)) {
-+                        case OPEN -> PathType.OPEN;
-+                        case BLOCKED -> PathType.BLOCKED;
-+                        default -> null;
-+                    };
-+                    if (newPathType != null) {
-+                        pathType = newPathType;
-+                    }
-+                    // Marigold end
+-    protected static PathType getPathTypeFromState(BlockGetter world, BlockPos pos) {
++    protected static PathType getPathTypeFromState(BlockGetter world, BlockPos pos, @Nullable NodeEvaluator evaluator) {
+         // Paper start - Do not load chunks during pathfinding
+         BlockState blockState = world.getBlockStateIfLoaded(pos);
+         if (blockState == null) {
+             return PathType.BLOCKED;
+         }
+         // Paper end
++        // Marigold start
++        if (evaluator != null) {
++            CraftBlock bblock = CraftBlock.at(evaluator.mob.level(), pos);
++            PathType newPathType = switch (evaluator.canPassHandler.apply(bblock)) {
++                case OPEN -> PathType.OPEN;
++                case BLOCKED -> PathType.BLOCKED;
++                default -> null;
++            };
++            if (newPathType != null) {
++                return newPathType;
++            }
++        }
++        // Marigold end
+         Block block = blockState.getBlock();
+         if (blockState.isAir()) {
+             return PathType.OPEN;
+@@ -528,4 +543,8 @@ public class WalkNodeEvaluator extends NodeEvaluator {
+             return PathType.DAMAGE_CAUTIOUS;
+         }
+     }
 +
-                     enumSet.add(pathType);
-                 }
-             }
++    protected static PathType getPathTypeFromState(BlockGetter world, BlockPos pos) {
++        return getPathTypeFromState(world, pos, null);
++    }
+ }
