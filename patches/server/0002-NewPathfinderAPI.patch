@@ -1,0 +1,118 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: zimzaza4 <3625282098@qq.com>
+Date: Fri, 2 Aug 2024 16:32:43 +0800
+Subject: [PATCH] NewPathfinderAPI
+
+
+diff --git a/src/main/java/com/destroystokyo/paper/entity/PaperPathfinder.java b/src/main/java/com/destroystokyo/paper/entity/PaperPathfinder.java
+index 946cbc955683e81933e0f3c0db5f8cc4ec437a76..291ab86287e8c3a87f276f3db3b261bd9b80bf9f 100644
+--- a/src/main/java/com/destroystokyo/paper/entity/PaperPathfinder.java
++++ b/src/main/java/com/destroystokyo/paper/entity/PaperPathfinder.java
+@@ -2,6 +2,7 @@ package com.destroystokyo.paper.entity;
+ 
+ import org.apache.commons.lang.Validate;
+ import org.bukkit.Location;
++import org.bukkit.block.Block;
+ import org.bukkit.craftbukkit.entity.CraftLivingEntity;
+ import org.bukkit.entity.LivingEntity;
+ import org.bukkit.entity.Mob;
+@@ -9,8 +10,11 @@ import javax.annotation.Nonnull;
+ import javax.annotation.Nullable;
+ import net.minecraft.world.level.pathfinder.Node;
+ import net.minecraft.world.level.pathfinder.Path;
++import re.imc.marigold.pathfinder.PathType;
++
+ import java.util.ArrayList;
+ import java.util.List;
++import java.util.function.Function;
+ 
+ public class PaperPathfinder implements com.destroystokyo.paper.entity.Pathfinder {
+ 
+@@ -99,6 +103,11 @@ public class PaperPathfinder implements com.destroystokyo.paper.entity.Pathfinde
+         entity.getNavigation().pathFinder.nodeEvaluator.setCanFloat(canFloat);
+     }
+ 
++    @Override
++    public void setCanPassHandler(Function<Block, PathType> handler) {
++        entity.getNavigation().pathFinder.nodeEvaluator.setCanPassHandler(handler);
++    }
++
+     public class PaperPathResult implements com.destroystokyo.paper.entity.PaperPathfinder.PathResult {
+ 
+         private final Path path;
+diff --git a/src/main/java/net/minecraft/world/level/pathfinder/NodeEvaluator.java b/src/main/java/net/minecraft/world/level/pathfinder/NodeEvaluator.java
+index 03fef01b9801cfa1c365f9b490c203a29f94cbea..f3799dfcdff269e0a005201e71ae52287cfc1f12 100644
+--- a/src/main/java/net/minecraft/world/level/pathfinder/NodeEvaluator.java
++++ b/src/main/java/net/minecraft/world/level/pathfinder/NodeEvaluator.java
+@@ -10,6 +10,9 @@ import net.minecraft.world.level.PathNavigationRegion;
+ import net.minecraft.world.level.block.Blocks;
+ import net.minecraft.world.level.block.CampfireBlock;
+ import net.minecraft.world.level.block.state.BlockState;
++import org.bukkit.block.Block;
++
++import java.util.function.Function;
+ 
+ public abstract class NodeEvaluator {
+     protected PathfindingContext currentContext;
+@@ -22,6 +25,7 @@ public abstract class NodeEvaluator {
+     protected boolean canOpenDoors;
+     protected boolean canFloat;
+     protected boolean canWalkOverFences;
++    protected Function<Block, re.imc.marigold.pathfinder.PathType> canPassHandler;
+ 
+     public void prepare(PathNavigationRegion cachedWorld, Mob entity) {
+         this.currentContext = new PathfindingContext(cachedWorld, entity);
+@@ -75,6 +79,10 @@ public abstract class NodeEvaluator {
+         this.canFloat = canSwim;
+     }
+ 
++    public void setCanPassHandler(Function<Block, re.imc.marigold.pathfinder.PathType> canPassHandler) {
++        this.canPassHandler = canPassHandler;
++    }
++
+     public void setCanWalkOverFences(boolean canWalkOverFences) {
+         this.canWalkOverFences = canWalkOverFences;
+     }
+@@ -95,6 +103,10 @@ public abstract class NodeEvaluator {
+         return this.canWalkOverFences;
+     }
+ 
++    public Function<Block, re.imc.marigold.pathfinder.PathType> getCanPassHandler() {
++        return canPassHandler;
++    }
++
+     public static boolean isBurningBlock(BlockState state) {
+         return state.is(BlockTags.FIRE)
+             || state.is(Blocks.LAVA)
+diff --git a/src/main/java/net/minecraft/world/level/pathfinder/WalkNodeEvaluator.java b/src/main/java/net/minecraft/world/level/pathfinder/WalkNodeEvaluator.java
+index f26383cf896785333dbd6f86348d5a5f67a6731f..2cef4616982c900fbce9d7a8839ecb56a14ae772 100644
+--- a/src/main/java/net/minecraft/world/level/pathfinder/WalkNodeEvaluator.java
++++ b/src/main/java/net/minecraft/world/level/pathfinder/WalkNodeEvaluator.java
+@@ -27,6 +27,7 @@ import net.minecraft.world.level.material.Fluids;
+ import net.minecraft.world.phys.AABB;
+ import net.minecraft.world.phys.Vec3;
+ import net.minecraft.world.phys.shapes.VoxelShape;
++import org.bukkit.craftbukkit.block.CraftBlock;
+ 
+ public class WalkNodeEvaluator extends NodeEvaluator {
+     public static final double SPACE_BETWEEN_WALL_POSTS = 0.5;
+@@ -410,6 +411,19 @@ public class WalkNodeEvaluator extends NodeEvaluator {
+                         pathType = PathType.UNPASSABLE_RAIL;
+                     }
+ 
++                    // Marigold start
++                    BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos(l, m, n);
++                    CraftBlock bblock = CraftBlock.at(mob.level(), pos);
++                    PathType newPathType = switch (canPassHandler.apply(bblock)) {
++                        case OPEN -> PathType.OPEN;
++                        case BLOCKED -> PathType.BLOCKED;
++                        default -> null;
++                    };
++                    if (newPathType != null) {
++                        pathType = newPathType;
++                    }
++                    // Marigold end
++
+                     enumSet.add(pathType);
+                 }
+             }
