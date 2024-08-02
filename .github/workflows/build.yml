@@ -1,0 +1,27 @@
+name: Build Marigold
+on: [ push, pull_request ]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4.1.7
+    - name: Set up JDK 21
+      uses: actions/setup-java@v4.2.1
+      with:
+        java-version: 21.0.4
+        distribution: 'temurin'
+    - name: Configure Git
+      run: |
+          git config --global user.email "actions@github.com"
+          git config --global user.name "Github Actions"
+    - name: Grant execute permission for gradlew
+      run: chmod +x gradlew
+    - name: Apply patches
+      run: ./gradlew applyPatches
+    - name: Generate Paperclip Jar
+      run: ./gradlew createMojmapPaperclipJar
+    - name: Upload Paperclip
+      uses: actions/upload-artifact@v4.3.4
+      with:
+        name: Marigold
+        path: build/libs/marigold-paperclip-1.21-R0.1-SNAPSHOT-mojmap.jar

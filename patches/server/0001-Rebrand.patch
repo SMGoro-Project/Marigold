@@ -1,0 +1,63 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: zimzaza4 <3625282098@qq.com>
+Date: Fri, 2 Aug 2024 13:54:37 +0800
+Subject: [PATCH] Rebrand
+
+
+diff --git a/build.gradle.kts b/build.gradle.kts
+index 6e1c71f4073dc4b43787a3f6599453d9db7bf8bb..8164cadec292d4536ae32d466ef9a3581e255b6e 100644
+--- a/build.gradle.kts
++++ b/build.gradle.kts
+@@ -13,7 +13,7 @@ configurations.named(log4jPlugins.compileClasspathConfigurationName) {
+ val alsoShade: Configuration by configurations.creating
+ 
+ dependencies {
+-    implementation(project(":leaf-api")) // Gale start - project setup - Depend on own API // Leaf
++    implementation(project(":marigold-api")) // Gale start - project setup - Depend on own API // Leaf
+ 
+     // Leaf start - Leaf Config
+     implementation("com.github.thatsmusic99:ConfigurationMaster-API:v2.0.0-rc.2") {
+@@ -122,14 +122,14 @@ tasks.jar {
+         val gitBranch = git("rev-parse", "--abbrev-ref", "HEAD").getText().trim() // Paper
+         attributes(
+             "Main-Class" to "org.bukkit.craftbukkit.Main",
+-            "Implementation-Title" to "Leaf", // Gale - branding changes // Leaf
++            "Implementation-Title" to "Marigold", // Gale - branding changes // Leaf // Marigold
+             "Implementation-Version" to implementationVersion,
+             "Implementation-Vendor" to date, // Paper
+-            "Specification-Title" to "Leaf", // Gale - branding changes // Leaf
++            "Specification-Title" to "Marigold", // Gale - branding changes // Leaf // Marigold
+             "Specification-Version" to project.version,
+-            "Specification-Vendor" to "Winds Studio", // Gale - branding changes // Leaf
+-            "Brand-Id" to "winds-studio:leaf", // Gale - branding changes // Leaf
+-            "Brand-Name" to "Leaf", // Gale - branding changes // Leaf
++            "Specification-Vendor" to "SMGoro Project", // Gale - branding changes // Leaf // Marigold
++            "Brand-Id" to "smgoro-project:marigold", // Gale - branding changes // Leaf // Marigold
++            "Brand-Name" to "Marigold", // Gale - branding changes // Leaf
+             "Build-Number" to (build ?: ""),
+             "Build-Time" to Instant.now().toString(),
+             "Git-Branch" to gitBranch, // Paper
+diff --git a/src/main/java/io/papermc/paper/ServerBuildInfoImpl.java b/src/main/java/io/papermc/paper/ServerBuildInfoImpl.java
+index 9d003c2ae45a057c0274a34fe5012cf17d1a2681..e152bf48c2d48449c0aa9800a314ce4bb0d93873 100644
+--- a/src/main/java/io/papermc/paper/ServerBuildInfoImpl.java
++++ b/src/main/java/io/papermc/paper/ServerBuildInfoImpl.java
+@@ -34,6 +34,7 @@ public record ServerBuildInfoImpl(
+     private static final String BRAND_GALE_NAME = "Gale"; // Gale - branding changes
+     private static final String BRAND_PURPUR_NAME = "Purpur"; // Purpur
+     private static final String BRAND_LEAF_NAME = "Leaf"; // Leaf
++    private static final String BRAND_MARIGOLD_NAME = "Marigold"; // Marigold
+ 
+     private static final String BUILD_DEV = "DEV";
+ 
+@@ -45,9 +46,9 @@ public record ServerBuildInfoImpl(
+         this(
+             getManifestAttribute(manifest, ATTRIBUTE_BRAND_ID)
+                 .map(Key::key)
+-                .orElse(BRAND_LEAF_ID), // Gale - branding changes // Leaf
++                .orElse(BRAND_LEAF_ID), // Gale - branding changes // Leaf // Marigold
+             getManifestAttribute(manifest, ATTRIBUTE_BRAND_NAME)
+-                .orElse(BRAND_LEAF_NAME), // Gale - branding changes // Leaf
++                .orElse(BRAND_MARIGOLD_NAME), // Gale - branding changes // Leaf // Marigold
+             SharedConstants.getCurrentVersion().getId(),
+             SharedConstants.getCurrentVersion().getName(),
+             getManifestAttribute(manifest, ATTRIBUTE_BUILD_NUMBER)
