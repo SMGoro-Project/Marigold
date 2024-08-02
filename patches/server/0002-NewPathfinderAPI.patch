@@ -1,6 +1,6 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: zimzaza4 <3625282098@qq.com>
-Date: Fri, 2 Aug 2024 20:18:10 +0800
+Date: Fri, 2 Aug 2024 21:07:08 +0800
 Subject: [PATCH] NewPathfinderAPI
 
 
@@ -40,6 +40,21 @@ index 946cbc955683e81933e0f3c0db5f8cc4ec437a76..291ab86287e8c3a87f276f3db3b261bd
      public class PaperPathResult implements com.destroystokyo.paper.entity.PaperPathfinder.PathResult {
  
          private final Path path;
+diff --git a/src/main/java/net/minecraft/world/level/PathNavigationRegion.java b/src/main/java/net/minecraft/world/level/PathNavigationRegion.java
+index 30d19ae31fe29436482b3fbe146dc6238b1fd04b..e0faa777996f855fdb2c866ccbedf9fa4243dd5a 100644
+--- a/src/main/java/net/minecraft/world/level/PathNavigationRegion.java
++++ b/src/main/java/net/minecraft/world/level/PathNavigationRegion.java
+@@ -156,4 +156,10 @@ public class PathNavigationRegion implements BlockGetter, CollisionGetter {
+         return net.minecraft.util.profiling.InactiveProfiler.INSTANCE; // Gale - Purpur - remove vanilla profiler
+     }
+     // Leaf end - Redirect to fix plugin incompatibility
++
++    //Marigold start
++    public Level level() {
++        return level;
++    }
++    //Marigold stop
+ }
 diff --git a/src/main/java/net/minecraft/world/level/pathfinder/NodeEvaluator.java b/src/main/java/net/minecraft/world/level/pathfinder/NodeEvaluator.java
 index 03fef01b9801cfa1c365f9b490c203a29f94cbea..e1d4f8c7c6a1853b85dcb0945fc52d45231e6ccd 100644
 --- a/src/main/java/net/minecraft/world/level/pathfinder/NodeEvaluator.java
@@ -153,7 +168,7 @@ index 9b7f962df041f1b437a983c48337e35cfeb14744..2478e362b5792914af98c1b905d4ccb2
  
      public BlockState getBlockState(BlockPos pos) {
 diff --git a/src/main/java/net/minecraft/world/level/pathfinder/WalkNodeEvaluator.java b/src/main/java/net/minecraft/world/level/pathfinder/WalkNodeEvaluator.java
-index f26383cf896785333dbd6f86348d5a5f67a6731f..48d4683d008f44c280f0477645c302ddb0e2c011 100644
+index f26383cf896785333dbd6f86348d5a5f67a6731f..d1e9e6d50823332b6b20aa097f1ae3d12d5f9c7c 100644
 --- a/src/main/java/net/minecraft/world/level/pathfinder/WalkNodeEvaluator.java
 +++ b/src/main/java/net/minecraft/world/level/pathfinder/WalkNodeEvaluator.java
 @@ -6,6 +6,7 @@ import it.unimi.dsi.fastutil.objects.Object2BooleanMap;
@@ -180,7 +195,7 @@ index f26383cf896785333dbd6f86348d5a5f67a6731f..48d4683d008f44c280f0477645c302dd
  
  public class WalkNodeEvaluator extends NodeEvaluator {
      public static final double SPACE_BETWEEN_WALL_POSTS = 0.5;
-@@ -477,13 +480,26 @@ public class WalkNodeEvaluator extends NodeEvaluator {
+@@ -477,13 +480,33 @@ public class WalkNodeEvaluator extends NodeEvaluator {
          return fallback;
      }
  
@@ -193,7 +208,14 @@ index f26383cf896785333dbd6f86348d5a5f67a6731f..48d4683d008f44c280f0477645c302dd
          }
          // Paper end
 +        // Marigold start
-+        if (evaluator != null && world instanceof LevelAccessor accessor) {
++        if (evaluator != null) {
++            LevelAccessor accessor = null;
++            if (world instanceof LevelAccessor) {
++                accessor = (LevelAccessor) world;
++            }
++            if (world instanceof PathNavigationRegion region) {
++                accessor = region.level();
++            }
 +            CraftBlock bblock = CraftBlock.at(accessor, pos);
 +            PathType newPathType = switch (evaluator.canPassHandler.apply(bblock)) {
 +                case OPEN -> PathType.OPEN;
@@ -208,7 +230,7 @@ index f26383cf896785333dbd6f86348d5a5f67a6731f..48d4683d008f44c280f0477645c302dd
          Block block = blockState.getBlock();
          if (blockState.isAir()) {
              return PathType.OPEN;
-@@ -528,4 +544,8 @@ public class WalkNodeEvaluator extends NodeEvaluator {
+@@ -528,4 +551,8 @@ public class WalkNodeEvaluator extends NodeEvaluator {
              return PathType.DAMAGE_CAUTIOUS;
          }
      }
