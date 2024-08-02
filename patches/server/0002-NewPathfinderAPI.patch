@@ -1,6 +1,6 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: zimzaza4 <3625282098@qq.com>
-Date: Fri, 2 Aug 2024 21:07:08 +0800
+Date: Sat, 3 Aug 2024 00:21:33 +0800
 Subject: [PATCH] NewPathfinderAPI
 
 
@@ -168,7 +168,7 @@ index 9b7f962df041f1b437a983c48337e35cfeb14744..2478e362b5792914af98c1b905d4ccb2
  
      public BlockState getBlockState(BlockPos pos) {
 diff --git a/src/main/java/net/minecraft/world/level/pathfinder/WalkNodeEvaluator.java b/src/main/java/net/minecraft/world/level/pathfinder/WalkNodeEvaluator.java
-index f26383cf896785333dbd6f86348d5a5f67a6731f..d1e9e6d50823332b6b20aa097f1ae3d12d5f9c7c 100644
+index f26383cf896785333dbd6f86348d5a5f67a6731f..73d3ed1388647a55b7d874db96b5f080ed6a285b 100644
 --- a/src/main/java/net/minecraft/world/level/pathfinder/WalkNodeEvaluator.java
 +++ b/src/main/java/net/minecraft/world/level/pathfinder/WalkNodeEvaluator.java
 @@ -6,6 +6,7 @@ import it.unimi.dsi.fastutil.objects.Object2BooleanMap;
@@ -195,7 +195,7 @@ index f26383cf896785333dbd6f86348d5a5f67a6731f..d1e9e6d50823332b6b20aa097f1ae3d1
  
  public class WalkNodeEvaluator extends NodeEvaluator {
      public static final double SPACE_BETWEEN_WALL_POSTS = 0.5;
-@@ -477,13 +480,33 @@ public class WalkNodeEvaluator extends NodeEvaluator {
+@@ -477,13 +480,31 @@ public class WalkNodeEvaluator extends NodeEvaluator {
          return fallback;
      }
  
@@ -216,21 +216,19 @@ index f26383cf896785333dbd6f86348d5a5f67a6731f..d1e9e6d50823332b6b20aa097f1ae3d1
 +            if (world instanceof PathNavigationRegion region) {
 +                accessor = region.level();
 +            }
-+            CraftBlock bblock = CraftBlock.at(accessor, pos);
-+            PathType newPathType = switch (evaluator.canPassHandler.apply(bblock)) {
-+                case OPEN -> PathType.OPEN;
-+                case BLOCKED -> PathType.BLOCKED;
-+                default -> null;
-+            };
-+            if (newPathType != null) {
-+                return newPathType;
++            if (accessor != null) {
++                CraftBlock bblock = CraftBlock.at(accessor, pos);
++                switch (evaluator.canPassHandler.apply(bblock)) {
++                    case OPEN -> {return PathType.OPEN;}
++                    case BLOCKED -> {return PathType.BLOCKED;}
++                }
 +            }
 +        }
 +        // Marigold end
          Block block = blockState.getBlock();
          if (blockState.isAir()) {
              return PathType.OPEN;
-@@ -528,4 +551,8 @@ public class WalkNodeEvaluator extends NodeEvaluator {
+@@ -528,4 +549,8 @@ public class WalkNodeEvaluator extends NodeEvaluator {
              return PathType.DAMAGE_CAUTIOUS;
          }
      }
