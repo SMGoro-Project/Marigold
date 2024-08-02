@@ -1,6 +1,6 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: zimzaza4 <3625282098@qq.com>
-Date: Fri, 2 Aug 2024 16:32:43 +0800
+Date: Fri, 2 Aug 2024 17:20:11 +0800
 Subject: [PATCH] NewPathfinderAPI
 
 
@@ -41,7 +41,7 @@ index 946cbc955683e81933e0f3c0db5f8cc4ec437a76..291ab86287e8c3a87f276f3db3b261bd
  
          private final Path path;
 diff --git a/src/main/java/net/minecraft/world/level/pathfinder/NodeEvaluator.java b/src/main/java/net/minecraft/world/level/pathfinder/NodeEvaluator.java
-index 03fef01b9801cfa1c365f9b490c203a29f94cbea..f3799dfcdff269e0a005201e71ae52287cfc1f12 100644
+index 03fef01b9801cfa1c365f9b490c203a29f94cbea..e1d4f8c7c6a1853b85dcb0945fc52d45231e6ccd 100644
 --- a/src/main/java/net/minecraft/world/level/pathfinder/NodeEvaluator.java
 +++ b/src/main/java/net/minecraft/world/level/pathfinder/NodeEvaluator.java
 @@ -10,6 +10,9 @@ import net.minecraft.world.level.PathNavigationRegion;
@@ -58,7 +58,7 @@ index 03fef01b9801cfa1c365f9b490c203a29f94cbea..f3799dfcdff269e0a005201e71ae5228
      protected boolean canOpenDoors;
      protected boolean canFloat;
      protected boolean canWalkOverFences;
-+    protected Function<Block, re.imc.marigold.pathfinder.PathType> canPassHandler;
++    protected Function<Block, re.imc.marigold.pathfinder.PathType> canPassHandler = block -> re.imc.marigold.pathfinder.PathType.DEFAULT;
  
      public void prepare(PathNavigationRegion cachedWorld, Mob entity) {
          this.currentContext = new PathfindingContext(cachedWorld, entity);
