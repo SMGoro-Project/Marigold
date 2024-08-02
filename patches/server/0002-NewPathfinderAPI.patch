@@ -1,6 +1,6 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: zimzaza4 <3625282098@qq.com>
-Date: Fri, 2 Aug 2024 18:13:47 +0800
+Date: Fri, 2 Aug 2024 19:52:06 +0800
 Subject: [PATCH] NewPathfinderAPI
 
 
@@ -127,7 +127,7 @@ index b01d44d8403d2691db5c7dbc148f1dd3fdb4d8a3..c54d5d4e2895493458e4a4d46fa70097
          long l = pos.asLong();
          int i = index(l);
 diff --git a/src/main/java/net/minecraft/world/level/pathfinder/PathfindingContext.java b/src/main/java/net/minecraft/world/level/pathfinder/PathfindingContext.java
-index 9b7f962df041f1b437a983c48337e35cfeb14744..ea1c8a08eb17081d311d9fbdf8bb0333d8fa1602 100644
+index 9b7f962df041f1b437a983c48337e35cfeb14744..2478e362b5792914af98c1b905d4ccb2e470c423 100644
 --- a/src/main/java/net/minecraft/world/level/pathfinder/PathfindingContext.java
 +++ b/src/main/java/net/minecraft/world/level/pathfinder/PathfindingContext.java
 @@ -13,6 +13,7 @@ public class PathfindingContext {
@@ -148,7 +148,7 @@ index 9b7f962df041f1b437a983c48337e35cfeb14744..ea1c8a08eb17081d311d9fbdf8bb0333
      public PathType getPathTypeFromState(int x, int y, int z) {
          BlockPos blockPos = this.mutablePos.set(x, y, z);
 -        return this.cache == null ? WalkNodeEvaluator.getPathTypeFromState(this.level, blockPos) : this.cache.getOrCompute(this.level, blockPos);
-+        return this.cache == null ? WalkNodeEvaluator.getPathTypeFromState(this.level, blockPos, evaluator) : this.cache.getOrCompute(this.level, blockPos);
++        return this.cache == null ? WalkNodeEvaluator.getPathTypeFromState(this.level, blockPos, evaluator) : this.cache.getOrCompute(this.level, blockPos, evaluator);
      }
  
      public BlockState getBlockState(BlockPos pos) {
