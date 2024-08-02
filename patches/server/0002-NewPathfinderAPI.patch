@@ -1,6 +1,6 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: zimzaza4 <3625282098@qq.com>
-Date: Fri, 2 Aug 2024 19:52:06 +0800
+Date: Fri, 2 Aug 2024 20:18:10 +0800
 Subject: [PATCH] NewPathfinderAPI
 
 
@@ -153,7 +153,7 @@ index 9b7f962df041f1b437a983c48337e35cfeb14744..2478e362b5792914af98c1b905d4ccb2
  
      public BlockState getBlockState(BlockPos pos) {
 diff --git a/src/main/java/net/minecraft/world/level/pathfinder/WalkNodeEvaluator.java b/src/main/java/net/minecraft/world/level/pathfinder/WalkNodeEvaluator.java
-index f26383cf896785333dbd6f86348d5a5f67a6731f..0d9b3e94fbdc69772aab7944800cb99f13f0a7cd 100644
+index f26383cf896785333dbd6f86348d5a5f67a6731f..48d4683d008f44c280f0477645c302ddb0e2c011 100644
 --- a/src/main/java/net/minecraft/world/level/pathfinder/WalkNodeEvaluator.java
 +++ b/src/main/java/net/minecraft/world/level/pathfinder/WalkNodeEvaluator.java
 @@ -6,6 +6,7 @@ import it.unimi.dsi.fastutil.objects.Object2BooleanMap;
@@ -164,7 +164,15 @@ index f26383cf896785333dbd6f86348d5a5f67a6731f..0d9b3e94fbdc69772aab7944800cb99f
  import javax.annotation.Nullable;
  import net.minecraft.core.BlockPos;
  import net.minecraft.core.Direction;
-@@ -27,6 +28,7 @@ import net.minecraft.world.level.material.Fluids;
+@@ -14,6 +15,7 @@ import net.minecraft.tags.FluidTags;
+ import net.minecraft.util.Mth;
+ import net.minecraft.world.entity.Mob;
+ import net.minecraft.world.level.BlockGetter;
++import net.minecraft.world.level.LevelAccessor;
+ import net.minecraft.world.level.PathNavigationRegion;
+ import net.minecraft.world.level.block.BaseRailBlock;
+ import net.minecraft.world.level.block.Block;
+@@ -27,6 +29,7 @@ import net.minecraft.world.level.material.Fluids;
  import net.minecraft.world.phys.AABB;
  import net.minecraft.world.phys.Vec3;
  import net.minecraft.world.phys.shapes.VoxelShape;
@@ -172,7 +180,7 @@ index f26383cf896785333dbd6f86348d5a5f67a6731f..0d9b3e94fbdc69772aab7944800cb99f
  
  public class WalkNodeEvaluator extends NodeEvaluator {
      public static final double SPACE_BETWEEN_WALL_POSTS = 0.5;
-@@ -477,13 +479,26 @@ public class WalkNodeEvaluator extends NodeEvaluator {
+@@ -477,13 +480,26 @@ public class WalkNodeEvaluator extends NodeEvaluator {
          return fallback;
      }
  
@@ -185,8 +193,8 @@ index f26383cf896785333dbd6f86348d5a5f67a6731f..0d9b3e94fbdc69772aab7944800cb99f
          }
          // Paper end
 +        // Marigold start
-+        if (evaluator != null) {
-+            CraftBlock bblock = CraftBlock.at(evaluator.mob.level(), pos);
++        if (evaluator != null && world instanceof LevelAccessor accessor) {
++            CraftBlock bblock = CraftBlock.at(accessor, pos);
 +            PathType newPathType = switch (evaluator.canPassHandler.apply(bblock)) {
 +                case OPEN -> PathType.OPEN;
 +                case BLOCKED -> PathType.BLOCKED;
@@ -200,7 +208,7 @@ index f26383cf896785333dbd6f86348d5a5f67a6731f..0d9b3e94fbdc69772aab7944800cb99f
          Block block = blockState.getBlock();
          if (blockState.isAir()) {
              return PathType.OPEN;
-@@ -528,4 +543,8 @@ public class WalkNodeEvaluator extends NodeEvaluator {
+@@ -528,4 +544,8 @@ public class WalkNodeEvaluator extends NodeEvaluator {
              return PathType.DAMAGE_CAUTIOUS;
          }
      }
