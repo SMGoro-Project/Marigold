@@ -25,3 +25,8 @@ jobs:
       with:
         name: Marigold
         path: build/libs/marigold-paperclip-1.21-R0.1-SNAPSHOT-mojmap.jar
+    - name: Upload API
+      uses: actions/upload-artifact@v4.3.4
+      with:
+        name: Marigold API
+        path: build/marigold-api/libs/marigold-api-1.21-R0.1-SNAPSHOT.jar
