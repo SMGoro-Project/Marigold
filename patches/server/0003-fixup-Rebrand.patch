@@ -1,0 +1,19 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: zimzaza4 <3625282098@qq.com>
+Date: Sun, 11 Aug 2024 16:47:14 +0800
+Subject: [PATCH] fixup! Rebrand
+
+
+diff --git a/src/main/java/org/bukkit/craftbukkit/util/Versioning.java b/src/main/java/org/bukkit/craftbukkit/util/Versioning.java
+index e220f5601f6b92b7b280ce8ebe64117d30192b0e..7fd937a9b4aeae63e8baecb1b3ef7863d0282e6e 100644
+--- a/src/main/java/org/bukkit/craftbukkit/util/Versioning.java
++++ b/src/main/java/org/bukkit/craftbukkit/util/Versioning.java
+@@ -11,7 +11,7 @@ public final class Versioning {
+     public static String getBukkitVersion() {
+         String result = "Unknown-Version";
+ 
+-        InputStream stream = Bukkit.class.getClassLoader().getResourceAsStream("META-INF/maven/cn.dreeam.leaf/leaf-api/pom.properties"); // Gale - branding changes // Leaf
++        InputStream stream = Bukkit.class.getClassLoader().getResourceAsStream("META-INF/maven/re.imc.marigold/marigold-api/pom.properties"); // Gale - branding changes // Leaf
+         Properties properties = new Properties();
+ 
+         if (stream != null) {
